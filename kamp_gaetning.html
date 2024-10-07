@@ -1,0 +1,266 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Venskabelig Kampgætning</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #1c1c1c;
+            color: #fff;
+            padding: 20px;
+        }
+        .container {
+            max-width: 800px;
+            margin: auto;
+            background: #2a2a2a;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 0 15px rgba(0, 0, 0, 0.5);
+        }
+        h2, h3 {
+            text-align: center;
+            color: #f39c12;
+        }
+        table {
+            width: 100%;
+            margin-top: 20px;
+            border-collapse: collapse;
+            background-color: #333;
+        }
+        table, th, td {
+            border: 1px solid #444;
+        }
+        th, td {
+            padding: 15px;
+            text-align: center;
+            color: #fff;
+        }
+        th {
+            background-color: #444;
+        }
+        .guess-form {
+            margin-top: 20px;
+            text-align: center;
+        }
+        .guess-form input {
+            margin-bottom: 10px;
+            padding: 10px;
+            width: calc(100% - 40px);
+            max-width: 400px;
+            border: none;
+            border-radius: 5px;
+        }
+        .submit-btn {
+            background-color: #f39c12;
+            color: white;
+            border: none;
+            padding: 15px;
+            border-radius: 5px;
+            cursor: pointer;
+            width: calc(100% - 40px);
+            max-width: 200px;
+        }
+        .submit-btn:hover {
+            background-color: #e67e22;
+        }
+        .admin-section {
+            margin-top: 30px;
+            text-align: center;
+        }
+        .admin-input {
+            margin-bottom: 10px;
+            padding: 10px;
+            width: calc(100% - 40px);
+            max-width: 400px;
+            border: none;
+            border-radius: 5px;
+        }
+        .admin-btn {
+            background-color: #f39c12;
+            color: white;
+            border: none;
+            padding: 15px;
+            border-radius: 5px;
+            cursor: pointer;
+            width: calc(100% - 40px);
+            max-width: 200px;
+        }
+        .admin-btn:hover {
+            background-color: #e67e22;
+        }
+        .upcoming-matches {
+            margin-top: 30px;
+            text-align: center;
+        }
+        .error-message {
+            color: #e74c3c;
+            text-align: center;
+            margin-top: 20px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h2>Venskabelig Kampgætning</h2>
+        <form class="guess-form" id="guessForm">
+            <input type="email" id="email" placeholder="Din email" required><br>
+            <input type="text" id="match" placeholder="Kamp (f.eks. Team A vs Team B)" required><br>
+            <input type="text" id="guess" placeholder="Gæt på resultat (f.eks. 2-1)" required><br>
+            <button type="button" class="submit-btn" onclick="submitGuess()">Indsend Gæt</button>
+        </form>
+        
+        <h3>Gæt Resultater</h3>
+        <table id="resultsTable">
+            <thead>
+                <tr>
+                    <th>Email</th>
+                    <th>Kamp</th>
+                    <th>Tidspunkt</th>
+                </tr>
+            </thead>
+            <tbody>
+                <!-- Guess data will be populated here -->
+            </tbody>
+        </table>
+
+        <div class="admin-section">
+            <h3>Admin Login</h3>
+            <input type="password" id="adminPassword" class="admin-input" placeholder="Admin kodeord"><br>
+            <button type="button" class="admin-btn" onclick="adminLogin()">Admin Login</button>
+        </div>
+
+        <div class="upcoming-matches">
+            <h3>Kommende Kampe</h3>
+            <table id="upcomingMatchesTable">
+                <thead>
+                    <tr>
+                        <th>Kamp</th>
+                        <th>Dato</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <!-- Upcoming matches data will be populated here -->
+                </tbody>
+            </table>
+        </div>
+        <div id="errorMessage" class="error-message"></div>
+    </div>
+    <script>
+        const guessData = JSON.parse(localStorage.getItem('guessData')) || [];
+        const adminPassword = "admin123"; // Simpelt kodeord til admin-adgang
+
+        document.addEventListener("DOMContentLoaded", () => {
+            fetchUpcomingMatches();
+            renderTable();
+        });
+
+        function submitGuess() {
+            const email = document.getElementById('email').value;
+            const match = document.getElementById('match').value;
+            const guess = document.getElementById('guess').value;
+            const timestamp = new Date().toLocaleString();
+
+            if (email && match && guess) {
+                guessData.push({ email, match, guess, timestamp });
+                localStorage.setItem('guessData', JSON.stringify(guessData));
+                renderTable();
+                document.getElementById('guessForm').reset();
+            } else {
+                alert('Alle felter skal udfyldes!');
+            }
+        }
+
+        function renderTable() {
+            const tbody = document.getElementById('resultsTable').getElementsByTagName('tbody')[0];
+            tbody.innerHTML = '';
+
+            guessData.forEach(guess => {
+                const row = tbody.insertRow();
+                const emailCell = row.insertCell(0);
+                const matchCell = row.insertCell(1);
+                const timestampCell = row.insertCell(2);
+
+                emailCell.textContent = guess.email;
+                matchCell.textContent = guess.match;
+                timestampCell.textContent = guess.timestamp;
+            });
+        }
+
+        // Admin functionality to view all guesses
+        function adminLogin() {
+            const enteredPassword = document.getElementById('adminPassword').value;
+            if (enteredPassword === adminPassword) {
+                adminView();
+            } else {
+                alert('Forkert kodeord!');
+            }
+        }
+
+        function adminView() {
+            const tbody = document.getElementById('resultsTable').getElementsByTagName('tbody')[0];
+            tbody.innerHTML = '';
+
+            guessData.forEach(guess => {
+                const row = tbody.insertRow();
+                const emailCell = row.insertCell(0);
+                const matchCell = row.insertCell(1);
+                const guessCell = row.insertCell(2);
+                const timestampCell = row.insertCell(3);
+
+                emailCell.textContent = guess.email;
+                matchCell.textContent = guess.match;
+                guessCell.textContent = guess.guess;
+                timestampCell.textContent = guess.timestamp;
+            });
+        }
+
+        // Fetch upcoming matches from the Football-Data API (version 4) with extended date range
+        async function fetchUpcomingMatches() {
+            try {
+                const today = new Date().toISOString().split('T')[0];
+                const nextWeek = new Date();
+                nextWeek.setDate(nextWeek.getDate() + 7);
+                const nextWeekString = nextWeek.toISOString().split('T')[0];
+
+                const response = await fetch(`https://thingproxy.freeboard.io/fetch/https://api.football-data.org/v4/matches?dateFrom=${today}&dateTo=${nextWeekString}`, {
+                    headers: {
+                        'X-Auth-Token': '15017cd7a0534bc8b5fefb4c113a4af3'
+                    }
+                });
+                if (!response.ok) {
+                    throw new Error('Network response was not ok');
+                }
+                const data = await response.json();
+                console.log('Fetched Matches:', data); // Log the data to see what is returned
+                renderUpcomingMatches(data.matches);
+            } catch (error) {
+                console.error('Error fetching upcoming matches:', error);
+                document.getElementById('errorMessage').textContent = 'Fejl ved hentning af kampdata. Tjek din API-nøgle og internetforbindelse.';
+            }
+        }
+
+        function renderUpcomingMatches(matches) {
+            const tbody = document.getElementById('upcomingMatchesTable').getElementsByTagName('tbody')[0];
+            tbody.innerHTML = '';
+
+            if (matches && matches.length > 0) {
+                matches.forEach(match => {
+                    const row = tbody.insertRow();
+                    const matchCell = row.insertCell(0);
+                    const dateCell = row.insertCell(1);
+
+                    matchCell.textContent = `${match.homeTeam.name} vs ${match.awayTeam.name}`;
+                    dateCell.textContent = new Date(match.utcDate).toLocaleString();
+                });
+            } else {
+                const row = tbody.insertRow();
+                const noDataCell = row.insertCell(0);
+                noDataCell.colSpan = 2;
+                noDataCell.textContent = "Ingen kommende kampe fundet.";
+            }
+        }
+    </script>
+</body>
+</html>
