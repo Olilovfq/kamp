@@ -224,11 +224,7 @@
                 nextWeek.setDate(nextWeek.getDate() + 7);
                 const nextWeekString = nextWeek.toISOString().split('T')[0];
 
-                const response = await fetch(`https://cors-anywhere.herokuapp.com/https://api.football-data.org/v4/matches?dateFrom=${today}&dateTo=${nextWeekString}`, {
-                    headers: {
-                        'X-Auth-Token': '15017cd7a0534bc8b5fefb4c113a4af3'
-                    }
-                });
+                const response = await fetch(`http://127.0.0.1:5000/api/matches`);
                 if (!response.ok) {
                     throw new Error('Network response was not ok');
                 }
